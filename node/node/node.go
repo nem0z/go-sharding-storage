@@ -8,6 +8,11 @@ import (
 type Node struct {
 	Adresse string
 	Port    string
-	Storage s.Storage
-	Network n.Network
+	Storage *s.Storage
+	Network *n.Network
+}
+
+func (n *Node) Init(storage_path string) {
+	storage := &s.Storage{}
+	storage.Init(storage_path)
 }
