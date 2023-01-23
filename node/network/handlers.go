@@ -2,6 +2,7 @@ package network
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -36,11 +37,11 @@ func PostFile(s *s.Storage, w http.ResponseWriter, r *http.Request) {
 	chunk_size := 100000
 	chunks := utils.Chunk(binary_file, chunk_size)
 
-	hashs := make([]string, len(chunks))
+	hash_table := make(map[int]string, 10)
 
-	for _, chunk := range chunks {
+	for i, chunk := range chunks {
 		hash := sha256.Sum256(chunk)
-		hashs = append(hashs, fmt.Sprintf("%x", hash))
+		hash_table[i] = fmt.Sprintf("%x", hash)
 
 		err := s.Put(hash[:], chunk)
 		if err != nil {
