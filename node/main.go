@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"github.com/nem0z/go-sharding-storage/node/node"
+)
 
 func main() {
-	fmt.Println("I'm a node of the database cluster")
+	node := &node.Node{}
+	node.Init("./data", ":8888")
 }
