@@ -50,7 +50,7 @@ func PostFile(s *s.Storage, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	json_hashs, err := json.Marshal(hashs)
+	json_hashs, err := json.Marshal(hash_table)
 	if err != nil {
 		http.Error(w, "Error marshalling JSON", http.StatusInternalServerError)
 		return
@@ -74,8 +74,17 @@ func GetFile(s *s.Storage, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash := parts[2]
-	file_part, err := s.Get([]byte(hash))
+	hash_string := parts[2]
+
+	fmt.Println("Requested hash :", hash_string)
+
+	hash_byte, err := hex.DecodeString(hash_string)
+	if err != nil {
+		http.Error(w, "Can't convert the hash to buffer representation", http.StatusBadRequest)
+		return
+	}
+
+	file_part, err := s.Get(hash_byte)
 
 	if err != nil {
 		http.Error(w, "Error fetching the file for given hash", http.StatusBadRequest)
