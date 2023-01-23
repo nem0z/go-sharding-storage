@@ -74,17 +74,13 @@ func GetFile(s *s.Storage, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash_string := parts[2]
-
-	fmt.Println("Requested hash :", hash_string)
-
-	hash_byte, err := hex.DecodeString(hash_string)
+	hash, err := hex.DecodeString(parts[2])
 	if err != nil {
 		http.Error(w, "Can't convert the hash to buffer representation", http.StatusBadRequest)
 		return
 	}
 
-	file_part, err := s.Get(hash_byte)
+	file_part, err := s.Get(hash)
 
 	if err != nil {
 		http.Error(w, "Error fetching the file for given hash", http.StatusBadRequest)
