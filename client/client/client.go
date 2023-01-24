@@ -1,7 +1,6 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -51,10 +50,8 @@ func (c *Client) Upload(data io.Reader) (string, error) {
 		return "", err
 	}
 
-	var hash string
-	err = json.Unmarshal(body, &hash)
-
-	return hash, err
+	hash := fmt.Sprintf("%s", body)
+	return hash, nil
 }
 
 func (c *Client) Get(hash string) ([]byte, error) {
