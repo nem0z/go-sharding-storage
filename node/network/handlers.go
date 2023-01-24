@@ -83,16 +83,38 @@ func GetFile(s *s.Storage, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file_part, err := s.Get(hash)
+	binary_file, err := s.Get(hash)
 
 	if err != nil {
 		http.Error(w, "Error fetching the file for given hash", http.StatusBadRequest)
 		return
 	}
 
+	var hash_table map[int]string
+	err = json.Unmarshal(binary_file, &hash_table)
+	if err != nil {
+		http.Error(w, "Error parsing the table hash", http.StatusInternalServerError)
+		return
+	}
+
+	file_data := []byte{}
+	for i := 0; i < len(hash_table); i++ {
+		hash, err := hex.DecodeString(hash_table[i])
+		if err != nil {
+			return
+		}
+
+		file_part, err := s.Get(hash)
+		if err != nil {
+			return
+		}
+
+		file_data = append(file_data, file_part...)
+	}
+
 	w.Header().Set("Content-Type", "application/octet-stream")
 
-	_, err = w.Write(file_part)
+	_, err = w.Write(file_data)
 
 	if err != nil {
 		http.Error(w, "Error writing response body", http.StatusInternalServerError)
