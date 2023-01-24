@@ -37,7 +37,7 @@ func PostFile(s *s.Storage, w http.ResponseWriter, r *http.Request) {
 	chunk_size := 100000
 	chunks := utils.Chunk(binary_file, chunk_size)
 
-	hash_table := make(map[int]string, 10)
+	hash_table := make(map[int]string, len(chunks))
 
 	for i, chunk := range chunks {
 		hash := sha256.Sum256(chunk)
@@ -50,15 +50,18 @@ func PostFile(s *s.Storage, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	json_hashs, err := json.Marshal(hash_table)
+	file_hash := sha256.Sum256(binary_file)
+	json_hash_table, err := json.Marshal(hash_table)
 	if err != nil {
 		http.Error(w, "Error marshalling JSON", http.StatusInternalServerError)
 		return
 	}
 
+	s.Put(file_hash[:], json_hash_table)
+
 	w.Header().Set("Content-Type", "application/json")
 
-	_, err = w.Write(json_hashs)
+	fmt.Fprintf(w, "%x", file_hash)
 	if err != nil {
 		http.Error(w, "Error writing response body", http.StatusInternalServerError)
 		return
