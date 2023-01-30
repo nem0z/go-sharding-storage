@@ -8,11 +8,18 @@ import (
 )
 
 type Network struct {
-	Peers []string
+	PortHTTP string
+	PortUDP  string
+	PortTCP  string
+	Peers    []*Peer
 }
 
-func (n *Network) Init(port string, s *s.Storage) {
+func (n *Network) HandleHTTP(s *s.Storage) {
+	if n.PortHTTP == ":8888" {
 	http.HandleFunc("/file/", HandleFile(s))
+	}
 
-	log.Fatal(http.ListenAndServe(port, nil))
+	err := http.ListenAndServe(n.PortHTTP, nil)
+	log.Fatal(err)
+}
 }
