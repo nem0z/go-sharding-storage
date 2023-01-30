@@ -26,3 +26,8 @@ func ExportFile(path string, data []byte) error {
 
 	return nil
 }
+
+func VerifyFile(hash string, data []byte) bool {
+	data_hash := sha256.Sum256(data)
+	return fmt.Sprintf("%x", data_hash) == hash
+}
