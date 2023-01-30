@@ -52,3 +52,8 @@ func (node *Node) Start() {
 		}
 	}(ch_udp_req, ch_udp_resp)
 }
+
+func (node *Node) GetPart(hash []byte) []byte {
+	message := append([]byte("get_part "), hash...)
+	return node.Network.Broadcast(message)
+}
