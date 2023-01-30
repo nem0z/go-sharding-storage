@@ -34,7 +34,7 @@ func PostFile(s *s.Storage, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chunk_size := 100000
+	chunk_size := 1500
 	chunks := utils.Chunk(binary_file, chunk_size)
 
 	hash_table := make(map[int]string, len(chunks))
