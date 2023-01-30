@@ -12,12 +12,17 @@ type Node struct {
 	Network *n.Network
 }
 
-func (node *Node) Init(storage_path string, http_port string) {
+func (node *Node) Init(storage_path string, http_port string, udp_port string, tcp_port string) {
+
 	storage := &s.Storage{}
 	storage.Init(storage_path)
 	node.Storage = storage
 
-	network := &n.Network{}
-	network.Init(http_port, node.Storage)
+	network := &n.Network{
+		PortHTTP: http_port,
+		PortUDP:  udp_port,
+		PortTCP:  tcp_port,
+	}
+
 	node.Network = network
 }
