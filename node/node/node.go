@@ -1,13 +1,16 @@
 package node
 
 import (
+	"bytes"
+	"encoding/hex"
+	"encoding/json"
+	"log"
+
 	n "github.com/nem0z/go-sharding-storage/node/network"
 	s "github.com/nem0z/go-sharding-storage/node/storage"
 )
 
 type Node struct {
-	Adresse string
-	Port    string
 	Storage *s.Storage
 	Network *n.Network
 }
@@ -56,4 +59,38 @@ func (node *Node) Start() {
 func (node *Node) GetPart(hash []byte) []byte {
 	message := append([]byte("get_part "), hash...)
 	return node.Network.Broadcast(message)
+}
+
+func (node *Node) GetFile(hash []byte) ([]byte, error) {
+	data, err := node.Storage.Get(hash)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var hash_table map[int]string
+	err = json.Unmarshal(data, &hash_table)
+
+	if err != nil {
+		return nil, err
+	}
+
+	binary_file := []byte{}
+
+	for i := 0; i < len(hash_table); i++ {
+		hash, err := hex.DecodeString(hash_table[i])
+		if err != nil {
+			return nil, err
+		}
+
+		file_part, err := node.Storage.Get(hash)
+
+		//if err != nil {
+		file_part = node.GetPart(hash)
+		//}
+
+		binary_file = append(binary_file, file_part...)
+	}
+
+	return binary_file, nil
 }
