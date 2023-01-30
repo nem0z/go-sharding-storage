@@ -1,11 +1,18 @@
 package network
 
 import (
+	"fmt"
 	"log"
+	"net"
 	"net/http"
 
 	s "github.com/nem0z/go-sharding-storage/node/storage"
 )
+
+type RequestUDP struct {
+	Addr net.Addr
+	Data []byte
+}
 
 type Network struct {
 	PortHTTP string
@@ -16,12 +23,49 @@ type Network struct {
 
 func (n *Network) HandleHTTP(s *s.Storage) {
 	if n.PortHTTP == ":8888" {
-	http.HandleFunc("/file/", HandleFile(s))
+		http.HandleFunc("/file/", HandleFile(s))
 	}
 
 	err := http.ListenAndServe(n.PortHTTP, nil)
 	log.Fatal(err)
 }
+
+func (n *Network) HandleUDP(ch_send chan *RequestUDP, ch_recv chan *RequestUDP) {
+
+	listener, err := net.ListenPacket("udp", n.PortUDP)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go func() {
+		defer listener.Close()
+
+		for {
+			buf := make([]byte, 65535)
+			n, addr, err := listener.ReadFrom(buf)
+
+			if err != nil {
+				log.Println("Error handling UDP :", err)
+				continue
+			}
+
+			req := &RequestUDP{Addr: addr, Data: buf[:n]}
+			ch_send <- req
+		}
+	}()
+
+	go func() {
+		for {
+			req := <-ch_recv
+			_, err = listener.WriteTo(req.Data, req.Addr)
+			if err != nil {
+				fmt.Printf("%v\n", len(req.Data))
+				log.Println("Erreur when sending udp resp:", err)
+			}
+		}
+	}()
+}
+
 func (n *Network) Broadcast(message []byte) []byte {
 	ch := make(chan []byte, 1)
 
