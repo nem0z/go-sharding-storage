@@ -68,6 +68,15 @@ func (node *Node) Start() {
 			}
 		}
 	}(ch_udp_req, ch_udp_resp)
+func (node *Node) RelayPart(data []byte) {
+	message := append([]byte("relay_part "), data...)
+	node.Network.Relay(message)
+}
+
+func (node *Node) RelayFile(part_table [][]byte) {
+	for _, part := range part_table {
+		node.RelayPart(part)
+	}
 }
 
 func (node *Node) GetPart(hash []byte) []byte {
