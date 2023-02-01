@@ -10,14 +10,13 @@ import (
 	"strings"
 
 	s "github.com/nem0z/go-sharding-storage/node/storage"
-	"github.com/nem0z/go-sharding-storage/node/utils"
 )
 
-func HandleFile(s *s.Storage) func(w http.ResponseWriter, r *http.Request) {
+func HandleFile(s *s.Storage, ch chan []byte) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
-			PostFile(s, w, r)
+			PostFile(s, ch, w, r)
 		case http.MethodGet:
 			GetFile(s, w, r)
 		default:
@@ -26,38 +25,16 @@ func HandleFile(s *s.Storage) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func PostFile(s *s.Storage, w http.ResponseWriter, r *http.Request) {
-
+func PostFile(s *s.Storage, ch chan []byte, w http.ResponseWriter, r *http.Request) {
 	binary_file, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Error when reading the binary file", http.StatusNotAcceptable)
 		return
 	}
 
-	chunk_size := 1500
-	chunks := utils.Chunk(binary_file, chunk_size)
-
-	hash_table := make(map[int]string, len(chunks))
-
-	for i, chunk := range chunks {
-		hash := sha256.Sum256(chunk)
-		hash_table[i] = fmt.Sprintf("%x", hash)
-
-		err := s.Put(hash[:], chunk)
-		if err != nil {
-			http.Error(w, "Error storing file part", http.StatusBadRequest)
-			return
-		}
-	}
+	ch <- binary_file
 
 	file_hash := sha256.Sum256(binary_file)
-	json_hash_table, err := json.Marshal(hash_table)
-	if err != nil {
-		http.Error(w, "Error marshalling JSON", http.StatusInternalServerError)
-		return
-	}
-
-	s.Put(file_hash[:], json_hash_table)
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -66,7 +43,6 @@ func PostFile(s *s.Storage, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error writing response body", http.StatusInternalServerError)
 		return
 	}
-
 }
 
 func GetFile(s *s.Storage, w http.ResponseWriter, r *http.Request) {

@@ -40,12 +40,15 @@ func main() {
 		)
 	}
 
-	hash_string := "809494ec22ddda2edfd1ff67b8b9125ab39cd4550dc2b90a666b8d44021f56fc"
+	//hash_string := "241b967bd7d46fe7e0dd8d00136d32c5c55ed3e5827e264302d589dec6c55270"
+	hash_string := "5a6a3064403bd6aafaeaf9aacc6ef688e4014c6734ad7d78f5faa64d1c5989b9"
 	hash, err := hex.DecodeString(hash_string)
 	Handle(err)
 
 	binary_file, err := main_node.GetFile(hash)
-	Handle(err)
+	if err != nil {
+		fmt.Println("Error :", err)
+	}
 
 	if utils.VerifyFile(hash_string, binary_file) {
 		err := utils.ExportFile("./files/example_retrive.png", binary_file)
@@ -54,5 +57,7 @@ func main() {
 	} else {
 		log.Println("Error retrived data doesn't match expected file")
 	}
+
+	select {}
 
 }
