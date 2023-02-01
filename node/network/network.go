@@ -20,9 +20,9 @@ type Network struct {
 	Peers    []*Peer
 }
 
-func (n *Network) HandleHTTP(s *s.Storage) {
+func (n *Network) HandleHTTP(s *s.Storage, ch chan []byte) {
 	if n.PortHTTP == ":8888" {
-		http.HandleFunc("/file/", HandleFile(s))
+		http.HandleFunc("/file/", HandleFile(s, ch))
 	}
 
 	err := http.ListenAndServe(n.PortHTTP, nil)
