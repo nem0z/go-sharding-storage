@@ -1,7 +1,6 @@
 package network
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -59,11 +58,17 @@ func (n *Network) HandleUDP(ch_send chan *RequestUDP, ch_recv chan *RequestUDP) 
 			req := <-ch_recv
 			_, err = listener.WriteTo(req.Data, req.Addr)
 			if err != nil {
-				fmt.Printf("%v\n", len(req.Data))
 				log.Println("Erreur when sending udp resp:", err)
 			}
 		}
 	}()
+}
+
+func (n *Network) Relay(message []byte) {
+	for i := 0; i < 3; i++ {
+		idx := (int(message[len(message)-1]) + i) % len(n.Peers)
+		go n.Peers[idx].UDP(message)
+	}
 }
 
 func (n *Network) Broadcast(message []byte) []byte {
