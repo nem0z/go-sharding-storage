@@ -31,3 +31,9 @@ func VerifyFile(hash string, data []byte) bool {
 	data_hash := sha256.Sum256(data)
 	return fmt.Sprintf("%x", data_hash) == hash
 }
+
+func DisplayHashTable(hash_table map[int]string) {
+	for i := 0; i < len(hash_table); i++ {
+		fmt.Printf("%v : %v\n", i, hash_table[i])
+	}
+}
