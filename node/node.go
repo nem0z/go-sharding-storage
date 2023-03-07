@@ -10,6 +10,7 @@ import (
 
 	n "github.com/nem0z/go-sharding-storage/network"
 	s "github.com/nem0z/go-sharding-storage/storage"
+	"github.com/nem0z/go-sharding-storage/types"
 	"github.com/nem0z/go-sharding-storage/utils"
 	"github.com/syndtr/goleveldb/leveldb"
 )
@@ -37,9 +38,10 @@ func (node *Node) Init(storage_path string, http_port string, udp_port string, t
 func (node *Node) Start() {
 	ch_udp_req := make(chan *n.RequestUDP)
 	ch_udp_resp := make(chan *n.RequestUDP)
-	ch_http_parts := make(chan []byte)
+	ch_http_post := make(chan *types.WrappedChan)
+	ch_http_get := make(chan *types.WrappedChan)
 
-	go node.Network.HandleHTTP(node.Storage, ch_http_parts)
+	go node.Network.HandleHTTP(ch_http_post, ch_http_get)
 	go node.Network.HandleUDP(ch_udp_req, ch_udp_resp)
 
 	go func(ch_req chan *n.RequestUDP, ch_resp chan *n.RequestUDP) {
@@ -69,37 +71,50 @@ func (node *Node) Start() {
 		}
 	}(ch_udp_req, ch_udp_resp)
 
-	go func(ch chan []byte) {
-		binary_file := <-ch
+	go func(ch chan *types.WrappedChan) {
+		for {
+			post := <-ch
 
-		chunk_size := 9000
-		chunks := utils.Chunk(binary_file, chunk_size)
+			chunk_size := 9000
+			chunks := utils.Chunk(post.Data, chunk_size)
 
-		hash_table := make(map[int]string, len(chunks))
-		parts := make([][]byte, len(chunks))
+			hash_table := make(map[int]string, len(chunks))
+			parts := make([][]byte, len(chunks))
 
-		for i, chunk := range chunks {
-			hash := sha256.Sum256(chunk)
-			hash_table[i] = fmt.Sprintf("%x", hash)
-			parts[i] = chunk
+			for i, chunk := range chunks {
+				hash := sha256.Sum256(chunk)
+				hash_table[i] = fmt.Sprintf("%x", hash)
+				parts[i] = chunk
+			}
+
+			file_hash := sha256.Sum256(post.Data)
+			json_hash_table, err := json.Marshal(hash_table)
+
+			if err != nil {
+				log.Println("Error marshaling the hash table")
+				post.Chan <- nil
+				return
+			}
+
+			err = node.Storage.Put(file_hash[:], json_hash_table)
+			if err != nil {
+				log.Println("Error storing the hash table")
+				post.Chan <- nil
+				return
+			}
+
+			go node.RelayFile(parts)
+			post.Chan <- file_hash[:]
 		}
+	}(ch_http_post)
 
-		file_hash := sha256.Sum256(binary_file)
-		json_hash_table, err := json.Marshal(hash_table)
-
-		if err != nil {
-			log.Println("Error marshaling the hash table")
-			return
+	go func(ch chan *types.WrappedChan) {
+		for {
+			get := <-ch
+			binary_file, _ := node.GetFile(get.Data)
+			get.Chan <- binary_file
 		}
-
-		err = node.Storage.Put(file_hash[:], json_hash_table)
-		if err != nil {
-			log.Println("Error storing the hash table")
-			return
-		}
-
-		node.RelayFile(parts)
-	}(ch_http_parts)
+	}(ch_http_get)
 }
 
 func (node *Node) RelayPart(data []byte) {
@@ -142,7 +157,7 @@ func (node *Node) GetFile(hash []byte) ([]byte, error) {
 
 		file_part, err := node.Storage.Get(hash)
 
-		//if err != nil {
+		//if err != nil { // Don't get parts from current node
 		file_part = node.GetPart(hash)
 		//}
 
