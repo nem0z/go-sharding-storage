@@ -1,13 +1,11 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
 	"log"
 
 	"github.com/nem0z/go-sharding-storage/network"
 	"github.com/nem0z/go-sharding-storage/node"
-	"github.com/nem0z/go-sharding-storage/utils"
 )
 
 func Handle(err error) {
@@ -38,24 +36,6 @@ func main() {
 			main_node.Network.Peers,
 			&network.Peer{Address: fmt.Sprintf("localhost%v", port_udp)},
 		)
-	}
-
-	//hash_string := "241b967bd7d46fe7e0dd8d00136d32c5c55ed3e5827e264302d589dec6c55270"
-	hash_string := "5a6a3064403bd6aafaeaf9aacc6ef688e4014c6734ad7d78f5faa64d1c5989b9"
-	hash, err := hex.DecodeString(hash_string)
-	Handle(err)
-
-	binary_file, err := main_node.GetFile(hash)
-	if err != nil {
-		fmt.Println("Error :", err)
-	}
-
-	if utils.VerifyFile(hash_string, binary_file) {
-		err := utils.ExportFile("./files/example_retrive.png", binary_file)
-		Handle(err)
-		log.Printf("File successfully retrived : %x\n", hash)
-	} else {
-		log.Println("Error retrived data doesn't match expected file")
 	}
 
 	select {}
