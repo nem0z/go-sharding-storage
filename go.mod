@@ -1,4 +1,4 @@
-module github.com/nem0z/go-sharding-storage/node
+module github.com/nem0z/go-sharding-storage
 
 go 1.19
 
