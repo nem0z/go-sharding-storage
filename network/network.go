@@ -5,7 +5,8 @@ import (
 	"net"
 	"net/http"
 
-	s "github.com/nem0z/go-sharding-storage/node/storage"
+	"github.com/nem0z/go-sharding-storage/types"
+	"github.com/nem0z/go-sharding-storage/web"
 )
 
 type RequestUDP struct {
@@ -20,9 +21,9 @@ type Network struct {
 	Peers    []*Peer
 }
 
-func (n *Network) HandleHTTP(s *s.Storage, ch chan []byte) {
+func (n *Network) HandleHTTP(ch_post chan *types.WrappedChan, ch_get chan *types.WrappedChan) {
 	if n.PortHTTP == ":8888" {
-		http.HandleFunc("/file/", HandleFile(s, ch))
+		http.HandleFunc("/file/", web.HandleFile(ch_post, ch_get))
 	}
 
 	err := http.ListenAndServe(n.PortHTTP, nil)
