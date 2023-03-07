@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"log"
 
-	n "github.com/nem0z/go-sharding-storage/node/network"
-	s "github.com/nem0z/go-sharding-storage/node/storage"
-	"github.com/nem0z/go-sharding-storage/node/utils"
+	n "github.com/nem0z/go-sharding-storage/network"
+	s "github.com/nem0z/go-sharding-storage/storage"
+	"github.com/nem0z/go-sharding-storage/utils"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 

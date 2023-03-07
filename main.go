@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/nem0z/go-sharding-storage/node/network"
-	"github.com/nem0z/go-sharding-storage/node/node"
-	"github.com/nem0z/go-sharding-storage/node/utils"
+	"github.com/nem0z/go-sharding-storage/network"
+	"github.com/nem0z/go-sharding-storage/node"
+	"github.com/nem0z/go-sharding-storage/utils"
 )
 
 func Handle(err error) {
